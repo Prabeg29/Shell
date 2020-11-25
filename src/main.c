@@ -6,22 +6,31 @@
 
 char *read_line()
 {
-	int position = 0, c;
-	char *buffer = malloc(sizeof(char) * BUFSIZE);
-
-	// Read character until a new line oe EOF is encountered
-	while((c = getchar()) != '\n' || (c = getchar()) != EOF)
+	int position = 0;
+	char c, *buffer = malloc(sizeof(char));
+	
+	if(buffer == NULL)
 	{
-		// If we have exceeded the buffer, reallocate.
-		buffer = realloc(buffer, sizeof(char) * BUFSIZE);
-		buffer[position++] = c;
-		if (!buffer) 
+    	printf("Could not allocate memory!");
+    	exit(1);
+  	}
+  
+  	// Read input until a new line is hit.
+	while((c = getchar()) != '\n')
+	{
+		// Reallocate buffer if it exceeds
+		buffer = realloc(buffer, (sizeof(char)));
+
+		if(buffer == NULL)
 		{
-        	fprintf(stderr, "shell: allocation error\n");
-        	exit(EXIT_FAILURE);
-      	}
+			printf("Could not allocate memory!");
+			exit(1);
+		}
+
+		buffer[position++] = c;
 	}
 	buffer[position] = '\0';
+
 	return buffer;
 }
 
