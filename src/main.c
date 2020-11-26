@@ -2,28 +2,29 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define BUFSIZE 255
+#define BUFFER_SIZE_LINE 1
 #define TOKEN_DELIMITER " \t\r\n\a"
+#define BUFFER_SIZE_TOKEN 1
 
 /*
  * Function:  split_line
  * -----------------------------
- *  splits a line into tokens using strtok()
+ * splits a line into tokens using strtok()
  *
  * line: a line read from terminal
  *
  * returns: an array of pointers to individual tokens
  */
-/* char **split_line(char *line)
+char **sh_split_line(char *line)
 {
-	int position = 0;
+	int position = 0, buffer_size = BUFFER_SIZE_TOKEN;
 	char *token;
-	// pointer to an array which holds pointer(address) to the first character of the token
-	char **tokens = malloc(sizeof(char*) * 1);
+	//pointer to an array which holds pointer(address) to the first character of the token
+	char **tokens = malloc(sizeof(char*) * buffer_size);
 
-	if(!tokens)
+	if(tokens == NULL)
 	{
-		fprintf(stderr, "allocation error.\n");
+		fprintf(stderr, "Allocation error.\n");
 		exit(1);
 	}
 
@@ -31,18 +32,20 @@
 	while(token != NULL)
 	{
 		tokens[position++] = token;
-		tokens = realloc(tokens, sizeof(char*) * 1);
-
-		if(tokens == NULL)
+		if(position == buffer_size)
 		{
-			fprintf(stderr, "allocation error.\n");
-			exit(1);
+			buffer_size += position;
+			tokens = realloc(tokens, sizeof(char*) * buffer_size);
+			if(tokens == NULL)
+			{
+				fprintf(stderr, "Allocation Error.\n");
+			}
 		}
 		token = strtok(NULL, TOKEN_DELIMITER);
 	}
 	tokens[position] = NULL;
 	return tokens;
-} */
+}
 
 /*
  * Function:  read_line
@@ -51,9 +54,9 @@
  *
  * returns: a line read from terminal
  */
-char *read_line()
+char *sh_read_line()
 {
-	int position = 0, c, buffer_size = 10;
+	int position = 0, c, buffer_size = BUFFER_SIZE_LINE;
 	char *buffer = malloc(sizeof(char) * buffer_size);
 
 	if(buffer == NULL)
@@ -61,7 +64,7 @@ char *read_line()
 		fprintf(stderr, "Allocation Error.\n");
 	}
 
-	while(EOF != (c=getch()) && c != '\n')
+	while(EOF != (c=getchar()) && c != '\n')
 	{
 		buffer[position++] = c;
 		if(position == buffer_size)
@@ -81,13 +84,18 @@ char *read_line()
 
 void shell_loop()
 {
-	char *line; // **arguments;
+	char *line, **args;
+	int status; 
 	do
 	{
 		printf(">>");
-		line = read_line();
-		//arguments = split_line(line);
-	} while (1);
+		line = sh_read_line();
+		args = sh_split_line(line);
+		status = sh_execute(args);
+
+		free(line);
+		free(args);
+	} while (status);
 	
 }
 
