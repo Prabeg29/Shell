@@ -1,15 +1,52 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdio.h> 		// For: printf(), fprintf(), getchar(), perror(), stderr
+#include <stdlib.h> 	// For: malloc(), realloc(), free(), exit(), execvp(), EXIT_SUCCESS, EXIT_FAILURE
+#include <string.h> 	// For: strtok(), strcmp(), strcat(), strcpy()
+#include <sys/types.h>
+#include <unistd.h> 	// For: chdir(), fork(), exec(), pid_t, getcwd()
+#include <sys/wait.h> 
 
 #define BUFFER_SIZE_LINE 1
 #define TOKEN_DELIMITER " \t\r\n\a"
 #define BUFFER_SIZE_TOKEN 1
 
+/* 
+ * Builtin command name
+*/
+char *builtin_str[] = {"cd", "exit", "help"};
+
+/* 
+ * Function: shell_cd
+ * 
+ * Changes current working directory
+ * 
+ * args: arguments to the cd command, will consider only the first argument after the command name 
+*/
+int shell_cd(char **args)
+{
+	if(args[1] == NULL)
+		fprintf(stderr, "lsh: expected argument to \n cd \n");
+	else if (chdir(args[1]) < 0)
+		perror("lsh error"); 
+	return 1;
+}
+
+/*
+ * Function:  shell_exit
+ * 
+ * Exits from the shell
+ *
+ * return: status 0 to indicate termination
+ */
+int shell_exit(char ** args)
+{
+	return 0;
+}
+
+
 /*
  * Function:  split_line
- * -----------------------------
- * splits a line into tokens using strtok()
+ * 
+ * Splits a line into tokens using strtok()
  *
  * line: a line read from terminal
  *
@@ -49,7 +86,7 @@ char **sh_split_line(char *line)
 
 /*
  * Function:  read_line
- * ----------------------------
+ * 
  * reads a line from terminal
  *
  * returns: a line read from terminal
@@ -81,6 +118,36 @@ char *sh_read_line()
 	return buffer;
 }
 
+/*
+ * Function:  start_process
+ * 
+ * starts and executes a process for a command
+ *
+ * args: arguments tokenized from the command line
+ *
+ * return: status 1
+ */
+int sh_launch_process(char **args)
+{
+	pid_t pid, wpid;
+	pid = fork();
+	if(pid < 0)
+		// error forking			
+		fprintf(stderr, "failed to create a process");
+	else if(pid == 0) 
+		// child process
+		execvp(args[0], args); // replaces the child process to execute the command provied by the user
+	else
+	{
+		// parent process
+		do
+		{
+			wpid = waitpid(pid, &status, WUNTRACED)
+		} while (!WIFEXITED(status) && !WIFSIGNALED(status));
+		
+	}
+	return 1;
+}
 
 void shell_loop()
 {
